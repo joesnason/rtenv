@@ -314,11 +314,48 @@ void queue_str_task2()
 	queue_str_task("Hello 2\n", 50);
 }
 
+void ps()
+{
+    int fdout;
+    fdout = mq_open("/tmp/mqueue/out", 0);
+	write(fdout, "get ps command\n", strlen("get ps command\n")+1);
+}
+
+void my_echo()
+{
+    int fdout;
+    fdout = mq_open("/tmp/mqueue/out", 0);
+	write(fdout, "get echo commane\n", strlen("get echo commane\n")+1);
+}
+
+void hello()
+{
+	int fdout;
+	fdout = mq_open("/tmp/mqueue/out", 0);
+	write(fdout, "Hello, you are welcome!\n", strlen("Hello, you are welcome!\n")+1);
+}
+
+void parse_cmdline(int out, char *cmdname, char *cmdline)
+{
+
+	if(strcmp(cmdline, "ps\n\0") == 0)
+		ps();
+	else if(strcmp(cmdline, "echo\n\0") == 0)
+		my_echo();
+	else if(strcmp(cmdline, "hello\n\0") == 0)
+		hello();
+	else
+		write(out, "it is not command\n", strlen("it is not command\n")+1);
+
+	write(out,"\r",2);
+}
+
 void serial_readwrite_task()
 {
 	int fdout, fdin;
 	char str[100];
 	char ch;
+	char *cmdname;
 	int curr_char;
 	int done;
 
@@ -353,8 +390,7 @@ void serial_readwrite_task()
 		/* Once we are done building the response string, queue the
 		 * response to be sent to the RS232 port.
 		 */
-		write(fdout, str, curr_char+1+1);
-		write(fdout, "\r",2);
+		parse_cmdline(fdout, cmdname, str);
 	}
 }
 
