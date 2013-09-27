@@ -326,10 +326,9 @@ void serial_readwrite_task()
 	fdin = open("/dev/tty0/in", 0);
 
 	/* Prepare the response message to be queued. */
-	memcpy(str, "Got:", 4);
 
 	while (1) {
-		curr_char = 4;
+		curr_char = 0;
 		done = 0;
 		do {
 			/* Receive a byte from the RS232 port (this call will
@@ -355,6 +354,7 @@ void serial_readwrite_task()
 		 * response to be sent to the RS232 port.
 		 */
 		write(fdout, str, curr_char+1+1);
+		write(fdout, "\r",2);
 	}
 }
 
