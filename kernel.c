@@ -314,6 +314,43 @@ void queue_str_task2()
 	queue_str_task("Hello 2\n", 50);
 }
 
+char * int2str(int number, char *s)
+{
+	char const digits[] = "0123456789";
+	char *str = s;
+	int i = 0;
+
+	// handle negative case
+	if (number < 0){
+		number = -1 * number;
+		*str++='-';
+	}
+
+	// handle special case number is zero
+	if (number == 0){
+		*str='0';
+		*++str = '\0';
+		return s;
+	}
+
+	// count digit number
+	int shift = number;
+	while(shift){
+		++str;
+		shift = shift / 10;
+	}
+
+	*str = '\0';
+
+	// insert the number string
+	while(number){
+		*--str =digits[number%10];
+		number = number / 10;
+	}
+
+	return s;
+}
+
 void cmd_ps()
 {
     int fdout;
@@ -332,7 +369,8 @@ void cmd_hello()
 {
 	int fdout;
 	fdout = mq_open("/tmp/mqueue/out", 0);
-	write(fdout, "Hello, you are welcome!\n", strlen("Hello, you are welcome!\n")+1);
+	int status;
+	write(fdout, "Hello, you are welcome!\n\r", strlen("Hello, you are welcome!\n\r")+1);
 }
 
 void parse_cmdline(int out, char *cmdname, char *cmdline)
