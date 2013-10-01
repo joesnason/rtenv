@@ -314,6 +314,8 @@ void queue_str_task2()
 	queue_str_task("Hello 2\n", 50);
 }
 
+
+/* TODO need to add buffer size to avoid out of index */
 char * int2str(int number, char *s)
 {
 	char const digits[] = "0123456789";
