@@ -105,6 +105,14 @@ struct task_control_block {
     struct task_control_block  *next;
 };
 
+/* Task information */
+struct task_info {
+	struct task_control_block *task;
+	int tasks_amount;
+};
+
+static struct task_info global_tasks_info;
+
 /* 
  * pathserver assumes that all files are FIFOs that were registered
  * with mkfifo.  It also assumes a global tables of FDs shared by all
@@ -352,12 +360,54 @@ char * int2str(int number, char *s)
 
 	return s;
 }
+/*
+show the task status string, according to below definition.
 
+#define TASK_READY      0
+#define TASK_WAIT_READ  1
+#define TASK_WAIT_WRITE 2
+#define TASK_WAIT_INTR  3
+#define TASK_WAIT_TIME  4
+*/
+
+void print_task_status(int status)
+{
+	int fdout;
+	fdout = mq_open("/tmp/mqueue/out", 0);
+	switch(status){
+
+	case 0:
+		write(fdout,"READY",strlen("READY")+1);
+	case 1:
+		write(fdout, "WAIT READ", strlen("WAIT READ")+1);
+	case 2:
+		write(fdout, "WAIT WRITE", strlen("WAIT WRITE")+1);
+	case 3:
+		write(fdout, "WAIT IMIR", strlen("WAIT INIR")+1);
+	case 4:
+		write(fdout, "WAIT TIME", strlen("WAIT TIME")+1);
+	default:
+		write(fdout, "No Status", strlen("No Status")+1);
+	}
+}
+
+/* TODO add buffer size limitation to avoid out of index */
 void cmd_ps()
 {
     int fdout;
+	int i = 0;
+	char pid_str[20];
     fdout = mq_open("/tmp/mqueue/out", 0);
-	write(fdout, "get ps command\n", strlen("get ps command\n")+1);
+
+	for(; i < global_tasks_info.tasks_amount; i++){
+		int2str(global_tasks_info.task[i].pid,pid_str);
+		write(fdout, "=========================\n\r", strlen("=========================\n\r")+1);
+		write(fdout, "Pid               Status\n\r", strlen("Pid               Status\n\r")+1);
+		write(fdout, pid_str,strlen(pid_str)+1);
+		write(fdout, "\t",strlen("\t")+1);
+		print_task_status(global_tasks_info.task[i].status);
+		write(fdout, "\n\r", strlen("\n\r")+1);
+	}
 }
 
 void cmd_echo()
@@ -371,7 +421,6 @@ void cmd_hello()
 {
 	int fdout;
 	fdout = mq_open("/tmp/mqueue/out", 0);
-	int status;
 	write(fdout, "Hello, you are welcome!\n\r", strlen("Hello, you are welcome!\n\r")+1);
 }
 
@@ -763,6 +812,10 @@ int main()
 	tasks[task_count].pid = 0;
 	tasks[task_count].priority = PRIORITY_DEFAULT;
 	task_count++;
+
+	/* save global tasks info */
+	global_tasks_info.task = task;
+	global_tasks_info.tasks_amount = task_count;
 
 	/* Initialize all pipes */
 	for (i = 0; i < PIPE_LIMIT; i++)
