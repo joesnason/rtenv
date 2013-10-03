@@ -323,7 +323,7 @@ void queue_str_task2()
 }
 
 
-/* TODO need to add buffer size to avoid out of index */
+/* TODO: need to add buffer size to avoid out of index */
 char * int2str(int number, char *s)
 {
 	char const digits[] = "0123456789";
@@ -391,7 +391,7 @@ void print_task_status(int status)
 	}
 }
 
-/* TODO add buffer size limitation to avoid out of index */
+/* TODO: add buffer size limitation to avoid out of index */
 void cmd_ps()
 {
     int fdout;
