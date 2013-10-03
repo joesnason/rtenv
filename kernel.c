@@ -54,6 +54,7 @@ void puts(char *s)
 #define PIPE_BUF   64 /* Size of largest atomic pipe message */
 #define PATH_MAX   32 /* Longest absolute path */
 #define PIPE_LIMIT (TASK_LIMIT * 2)
+#define MAX_BUF_SIZE 32 /* set MAX buffer size, to convert integer to string. */
 
 #define PATHSERVER_FD (TASK_LIMIT + 3) 
 	/* File descriptor of pipe to pathserver */
@@ -322,13 +323,17 @@ void queue_str_task2()
 	queue_str_task("Hello 2\n", 50);
 }
 
-
-/* TODO: need to add buffer size to avoid out of index */
-char * int2str(int number, char *s)
+/*
+	Convert integer to string, the MAX buffer size is 32bit
+	PS: I assume integer size is 2 byte
+*/
+#define CAST_FAIL	0
+#define CAST_OK		1
+int int2str(int number, char *s, int max_size)
 {
 	char const digits[] = "0123456789";
 	char *str = s;
-	int i = 0;
+	int size = 0;
 
 	// handle negative case
 	if (number < 0){
@@ -336,11 +341,11 @@ char * int2str(int number, char *s)
 		*str++='-';
 	}
 
-	// handle special case number is zero
+	// handle special case, number is zero
 	if (number == 0){
 		*str='0';
 		*++str = '\0';
-		return s;
+		return CAST_OK;
 	}
 
 	// count digit number
@@ -348,6 +353,8 @@ char * int2str(int number, char *s)
 	while(shift){
 		++str;
 		shift = shift / 10;
+		size++;
+		if (size > max_size) return CAST_FAIL;
 	}
 
 	*str = '\0';
@@ -358,7 +365,7 @@ char * int2str(int number, char *s)
 		number = number / 10;
 	}
 
-	return s;
+	return CAST_OK;
 }
 /*
 show the task status string, according to below definition.
@@ -391,16 +398,19 @@ void print_task_status(int status)
 	}
 }
 
-/* TODO: add buffer size limitation to avoid out of index */
 void cmd_ps()
 {
     int fdout;
 	int i = 0;
-	char pid_str[20];
+	char pid_str[MAX_BUF_SIZE];
     fdout = mq_open("/tmp/mqueue/out", 0);
 
 	for(; i < global_tasks_info.tasks_amount; i++){
-		int2str(global_tasks_info.task[i].pid,pid_str);
+		if(!int2str(global_tasks_info.task[i].pid,pid_str,MAX_BUF_SIZE)){ 
+			write(fdout, "get cast ERROR\n\r",strlen("get cast ERROR\n\r"));
+			return;
+		}
+
 		write(fdout, "=========================\n\r", strlen("=========================\n\r")+1);
 		write(fdout, "Pid               Status\n\r", strlen("Pid               Status\n\r")+1);
 		write(fdout, pid_str,strlen(pid_str)+1);
