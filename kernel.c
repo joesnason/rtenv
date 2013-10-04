@@ -327,8 +327,8 @@ void queue_str_task2()
 	Convert integer to string, the MAX buffer size is 32bit
 	PS: I assume integer size is 2 byte
 */
-#define CAST_FAIL	0
-#define CAST_OK		1
+#define CONVERT_FAIL	0
+#define CONVERT_OK		1
 int int2str(int number, char *s, int max_size)
 {
 	char const digits[] = "0123456789";
@@ -345,7 +345,7 @@ int int2str(int number, char *s, int max_size)
 	if (number == 0){
 		*str='0';
 		*++str = '\0';
-		return CAST_OK;
+		return CONVERT_OK;
 	}
 
 	// count digit number
@@ -354,7 +354,7 @@ int int2str(int number, char *s, int max_size)
 		++str;
 		shift = shift / 10;
 		size++;
-		if (size > max_size) return CAST_FAIL;
+		if (size > max_size) return CONVERT_FAIL;
 	}
 
 	*str = '\0';
@@ -365,7 +365,7 @@ int int2str(int number, char *s, int max_size)
 		number = number / 10;
 	}
 
-	return CAST_OK;
+	return CONVERT_OK;
 }
 /*
 show the task status string, according to below definition.
